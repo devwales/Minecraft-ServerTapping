@@ -76,15 +76,63 @@ The server will respond with:
 }
 ```
 
+Note: All messages must end with a newline character (\n) when sending to the server.
+
 ### Example Usage with Different Tools
 
-1. **Using netcat**:
+1. **Using Node.js (Recommended)**:
 
-```bash
-echo '{"password":"your_secure_password_here","command":"say Hello World"}' | nc localhost 25566
+```javascript
+const net = require('net');
+
+// Configuration
+const config = {
+    host: 'localhost',
+    port: 4567,
+    password: 'your_secure_password_here',
+    command: 'say Hello World'
+};
+
+const payload = {
+    password: config.password,
+    command: config.command
+};
+
+// Create client with timeout
+const client = new net.Socket();
+const timeout = setTimeout(() => {
+    console.error('Connection timed out');
+    client.destroy();
+    process.exit(1);
+}, 5000);
+
+// Connect and send command
+client.connect(config.port, config.host, () => {
+    client.write(JSON.stringify(payload) + '\n');
+});
+
+// Handle response with buffering
+let dataBuffer = '';
+client.on('data', (data) => {
+    clearTimeout(timeout);
+    dataBuffer += data.toString();
+    
+    if (dataBuffer.includes('\n')) {
+        const response = JSON.parse(dataBuffer.trim());
+        console.log('Success:', response.success);
+        console.log('Message:', response.message);
+        client.end();
+    }
+});
 ```
 
-2. **Using Python**:
+2. **Using netcat**:
+
+```bash
+echo '{"password":"your_secure_password_here","command":"say Hello World"}' | nc localhost 4567
+```
+
+3. **Using Python**:
 
 ```python
 import socket
@@ -92,27 +140,32 @@ import json
 
 def send_command(host, port, password, command):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(5)  # 5 second timeout
     sock.connect((host, port))
+    
     request = {
         "password": password,
         "command": command
     }
+    
+    # Send with newline
     sock.send((json.dumps(request) + "\n").encode())
-    response = sock.recv(1024).decode()
+    
+    # Receive response
+    response = ""
+    while True:
+        data = sock.recv(1024).decode()
+        response += data
+        if '\n' in response:
+            break
+    
     sock.close()
-    return json.loads(response)
+    return json.loads(response.strip())
 
 # Example usage
-response = send_command("localhost", 25566, "your_secure_password_here", "say Hello World")
-print(response)
-```
-
-3. **Using curl**:
-
-```bash
-curl -X POST -H "Content-Type: application/json" \
--d '{"password":"your_secure_password_here","command":"say Hello World"}' \
-localhost:25566
+response = send_command("localhost", 4567, "your_secure_password_here", "say Hello World")
+print(f"Success: {response['success']}")
+print(f"Message: {response['message']}")
 ```
 
 ## Security Considerations
@@ -143,6 +196,19 @@ localhost:25566
    - Check the server console for errors.
    - Verify the command sender has appropriate permissions.
    - Ensure commands are properly formatted.
+
+## Additional Troubleshooting
+
+4. **Response Parsing Issues**:
+   - Ensure you're handling the complete response (waiting for newline)
+   - Use proper buffering for received data
+   - Check that the response is valid JSON
+   - Verify the connection isn't closed prematurely
+
+5. **Timeout Issues**:
+   - The server may take a moment to execute commands
+   - Implement proper timeout handling (default: 5 seconds)
+   - Check server logs for execution delays
 
 ## Permissions
 

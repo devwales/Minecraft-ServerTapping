@@ -100,16 +100,31 @@ public class CommandServer {
             // Reset failed attempts on successful auth
             failedAttempts.remove(clientIP);
 
-            // Execute command on the main thread
+            // Execute command on the main thread and wait for completion
             Bukkit.getScheduler().runTask(plugin, () -> {
-                boolean success = Bukkit.getServer().dispatchCommand(
-                    Bukkit.getConsoleSender(), 
-                    request.command
-                );
-                String response = gson.toJson(new CommandResponse(success, "Command executed"));
-                plugin.getLogger().info("Sending response: " + response);
-                out.println(response);
+                try {
+                    boolean success = Bukkit.getServer().dispatchCommand(
+                        Bukkit.getConsoleSender(), 
+                        request.command
+                    );
+                    String response = gson.toJson(new CommandResponse(success, "Command executed"));
+                    plugin.getLogger().info("Sending response: " + response);
+                    synchronized (out) {
+                        out.println(response);
+                        out.flush();
+                    }
+                } catch (Exception e) {
+                    String response = gson.toJson(new CommandResponse(false, "Error: " + e.getMessage()));
+                    plugin.getLogger().warning("Command execution error: " + e.getMessage());
+                    synchronized (out) {
+                        out.println(response);
+                        out.flush();
+                    }
+                }
             });
+
+            // Wait a short time for the response to be sent
+            Thread.sleep(100);
 
         } catch (Exception e) {
             plugin.getLogger().warning("Error handling client: " + e.getMessage());
