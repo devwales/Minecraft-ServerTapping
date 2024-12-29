@@ -1,0 +1,10 @@
+name: Connector
+version: '1.0'
+main: com.example.connector.Connector
+api-version: '1.21'
+description: Secure remote command execution plugin
+commands:
+  connector:
+    description: Main command for Connector plugin
+    usage: /connector reload
+    permission: connector.admin 

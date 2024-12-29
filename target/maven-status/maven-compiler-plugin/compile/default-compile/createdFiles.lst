@@ -1,0 +1,5 @@
+com\example\connector\CommandServer.class
+com\example\connector\Connector.class
+com\example\connector\CommandServer$CommandRequest.class
+com\example\connector\CommandServer$CommandResponse.class
+com\example\connector\ConfigManager.class

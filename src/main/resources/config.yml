@@ -1,0 +1,13 @@
+# Connector Plugin Configuration
+
+# Port for the remote command server
+port: 4567
+
+# Password for authentication (change this!)
+password: "abc123"
+
+# Maximum number of failed authentication attempts before temporary IP ban
+max_failed_attempts: 5
+
+# Ban duration in minutes after exceeding max failed attempts
+ban_duration: 30 
