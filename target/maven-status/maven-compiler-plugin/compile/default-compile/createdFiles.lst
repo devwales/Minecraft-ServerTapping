@@ -1,3 +1,4 @@
+com\example\connector\CommandServer$TestResponse.class
 com\example\connector\CommandServer.class
 com\example\connector\Connector.class
 com\example\connector\CommandServer$CommandRequest.class

@@ -81,6 +81,14 @@ public class CommandServer {
 
             CommandRequest request = gson.fromJson(jsonInput, CommandRequest.class);
 
+            // Handle test request
+            if (request.command != null && request.command.equals("__test__")) {
+                String response = gson.toJson(new TestResponse());
+                plugin.getLogger().info("Sending test response: " + response);
+                out.println(response);
+                return;
+            }
+
             if (!request.password.equals(plugin.getConfig().getString("password"))) {
                 handleFailedAuth(clientIP);
                 String response = gson.toJson(new CommandResponse(false, "Invalid password"));
@@ -153,6 +161,20 @@ public class CommandServer {
         CommandResponse(boolean success, String message) {
             this.success = success;
             this.message = message;
+        }
+    }
+
+    private static class TestResponse {
+        final boolean connected;
+        final String serverVersion;
+        final String pluginVersion;
+        final long timestamp;
+
+        TestResponse() {
+            this.connected = true;
+            this.serverVersion = Bukkit.getVersion();
+            this.pluginVersion = Bukkit.getPluginManager().getPlugin("Connector").getDescription().getVersion();
+            this.timestamp = System.currentTimeMillis();
         }
     }
 } 

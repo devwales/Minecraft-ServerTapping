@@ -13,6 +13,7 @@ A secure Minecraft Paper plugin that allows remote command execution through a T
 - Configurable port and password
 - JSON-based communication
 - In-game reload command
+- Connection testing endpoint
 
 ## Installation
 
@@ -154,10 +155,61 @@ For issues, bug reports, or feature requests, please create an issue on the GitH
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Connection Testing
+
+The plugin provides a special test endpoint that allows you to verify the connection and get server information without authentication. This is useful for monitoring and integration purposes.
+
+### Using the Test Script
+
+1. Save the test script as `test_connection.js`
+2. Run it using Node.js:
+
+```bash
+node test_connection.js
 ```
 
-### Changes made:
-- Improved readability with consistent formatting (code blocks, headers, and indentation).
-- Grouped related sections (e.g., examples, security, troubleshooting).
-- Clarified steps in sections, like installation and building from source.
-- Removed redundant information (e.g., "Example Usage" section repeated).
+### Test Response Format
+
+The test endpoint returns a JSON response with server information:
+
+```json
+{
+  "connected": true,
+  "serverVersion": "Paper version git-Paper-xxx (MC: 1.21)",
+  "pluginVersion": "1.0",
+  "timestamp": 1647789012345
+}
+```
+
+### Custom Implementation
+
+To implement the test in your own code, send this JSON payload:
+
+```json
+{
+  "password": "",
+  "command": "__test__"
+}
+```
+
+Example using Node.js:
+```javascript
+const net = require('net');
+const client = new net.Socket();
+
+const payload = {
+    password: '',
+    command: '__test__'
+};
+
+client.connect(4567, 'localhost', () => {
+    client.write(JSON.stringify(payload) + '\n');
+});
+
+client.on('data', (data) => {
+    const response = JSON.parse(data.toString().trim());
+    console.log('Server Status:', response);
+    client.end();
+});
+```
